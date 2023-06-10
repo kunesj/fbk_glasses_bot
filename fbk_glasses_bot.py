@@ -33,6 +33,8 @@ AUTHOR_LINK = f"u/{CONFIG['author']}"
 
 if CONFIG.get("debug"):
     _logger.setLevel(logging.DEBUG)
+    for logger_name in ("praw", "prawcore"):
+        logging.getLogger(logger_name).setLevel(logging.DEBUG)
 
 
 # copypasta text and keywords
