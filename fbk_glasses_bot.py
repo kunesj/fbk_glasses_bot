@@ -1,52 +1,113 @@
+#!/usr/bin/env python3.11
+
+import json
+import logging
+import os
+import sys
+import time
+
 import praw
 
-reddit = praw.Reddit(
-    user_agent="fbk_glasses_bot (by u/yoyoyonono)",
-    client_id="redacted",
-    client_secret="redacted",
-    username="redacted",
-    password="redacted"
-)
+logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-fbk_copypasta = """I gotchu
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
+
+
+# load config
+
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+if not os.path.exists(CONFIG_PATH):
+    _logger.error("Config file not found: %s", CONFIG_PATH)
+    sys.exit(1)
+
+with open(CONFIG_PATH, "r") as f:
+    try:
+        CONFIG = json.loads(f.read())
+    except json.JSONDecodeError:
+        _logger.exception("Config file is not valid JSON")
+        sys.exit(1)
+
+AUTHOR_LINK = f"u/{CONFIG['author']}"
+
+
+# copypasta text and keywords
+
+
+FBK_COPYPASTA = f"""I gotchu
 _Takes a deep breath_
 
 Glasses are really versatile. First, you can have glasses-wearing girls take them off and suddenly become beautiful, or have girls wearing glasses flashing those cute grins, or have girls stealing the protagonist's glasses and putting them on like, "Haha, got your glasses!" That's just way too cute! Also, boys with glasses! I really like when their glasses have that suspicious looking gleam, and it's amazing how it can look really cool or just be a joke. I really like how it can fulfill all those abstract needs. Being able to switch up the styles and colors of glasses based on your mood is a lot of fun too! It's actually so much fun! You have those half rim glasses, or the thick frame glasses, everything! It's like you're enjoying all these kinds of glasses at a buffet. I really want Luna to try some on or Marine to try some on to replace her eyepatch. We really need glasses to become a thing in hololive and start selling them for HoloComi. Don't. You. Think. We. Really. Need. To. Officially. Give. Everyone. Glasses?
 
 
-_this is a bot. by u/yoyoyonono_"""
-
-fbk_copypasta_jp = """I gotchu
+_this is a bot. by {AUTHOR_LINK}_"""
+FBK_COPYPASTA_JP = f"""I gotchu
 _Takes a deep breath_
 
 眼鏡っていうのは本当にめちゃめちゃ多様性があるんですよねまず眼鏡をかけている女の子が眼鏡を外して美少女だったりとか逆に眼鏡をかけてニコニコしてみたり主人公の眼鏡を奪って着けてる女子や｢うばっちゃったぞ☆｣みたいにかけてそれも凄いかわいいんですよねあとは眼鏡男子もねあの眼鏡があやしく光ったり逆光してる姿もいいですしかっこいいもかわいいもそしてギャグまで使い回せるってのはめちゃめちゃいいんですよねシチュエーションでも対応してできるところもめちゃめちゃいいんですよ多種多様な形とか色とかもそのキャラに合った眼鏡を着せ替えて楽しむのも本当に楽しいですアンダーリムとかねちょっと淵が太いやつとかね本当にヴァイキングのようにめちゃめちゃ楽しめるんですルーナちゃんにかけてみたりマリンちゃんも眼帯外してかけてみたりとかもうホロライブメガネはマジで流行ってほしいしホロコミに出すべきだし是非！公式から！みんなに！眼鏡を！付与して！ほしいと思わないかなぁ！？かけたいよね？
 
 
-_this is a bot. by u/yoyoyonono_"""
-glasses = 'glasses'
-glasses_type_japanese_words = ['megane', '眼鏡', 'メガネ', 'めがね']
+_this is a bot. by {AUTHOR_LINK}_"""
 
-subreddit = reddit.subreddit("hololive+hololewd+test")
+KEYWORDS = ["glasses"]
+KEYWORDS_JP = ["megane", "眼鏡", "メガネ", "めがね"]
+
+
+# bot loop
+
+
+_logger.info("Starting")
+
+reddit = praw.Reddit(
+    user_agent=f"fbk_glasses_bot (by {AUTHOR_LINK})",
+    client_id=CONFIG["client_id"],
+    client_secret=CONFIG["client_secret"],
+    username=CONFIG["username"],
+    password=CONFIG["password"],
+)
+subreddit = reddit.subreddit("+".join(CONFIG["subreddits"]))
+
+ERROR_SLEEP_TIME = 60
 while True:
     try:
-        for submission in subreddit.stream.submissions():
-            print(submission.title)
-            if glasses in ''.join(e for e in submission.title.lower() if e.isalnum()):
-                try:
-                    print('replied')
-                    submission.reply(fbk_copypasta)
-                except:
-                    print('rate limited')
-                continue
-            else:
-                for x in glasses_type_japanese_words:
-                    if x in ''.join(e for e in submission.title.lower() if e.isalnum()):
-                        try:
-                            print('replied')
-                            submission.reply(fbk_copypasta_jp)
-                        except:
-                            print('rate limited')
-                        continue
-    except:
-        pass
+        for submission in subreddit.stream.submissions(skip_existing=True):
+            _logger.debug("%s: Title: %s", submission.id, submission.title)
 
+            # get text of the reply
+
+            alnum_title = "".join(e for e in submission.title.lower() if e.isalnum())
+            if any(x in alnum_title for x in KEYWORDS):
+                reply_text = FBK_COPYPASTA
+            elif any(x in alnum_title for x in KEYWORDS_JP):
+                reply_text = FBK_COPYPASTA_JP
+            else:
+                reply_text = None
+
+            # reply
+
+            if reply_text:
+                _logger.info("%s: Replying", submission.id)
+                if CONFIG.get("debug"):
+                    _logger.debug("%s: Reply not posted in debug mode", submission.id)
+                else:
+                    submission.reply(reply_text)
+
+    except KeyboardInterrupt:
+        _logger.info("Keyboard interrupt")
+        break
+
+    except praw.exceptions.RedditAPIException as e:
+        # might be rate limited
+        _logger.error(
+            "Unexpected API error! Sleeping %ss just in case it's a rate limit: %s",
+            ERROR_SLEEP_TIME,
+            e,
+        )
+        time.sleep(ERROR_SLEEP_TIME)
+
+    except Exception:
+        _logger.exception(
+            "Unexpected error! Sleeping %ss before trying again.", ERROR_SLEEP_TIME
+        )
+        time.sleep(ERROR_SLEEP_TIME)
