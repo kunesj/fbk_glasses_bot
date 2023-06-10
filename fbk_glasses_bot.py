@@ -31,6 +31,9 @@ with open(CONFIG_PATH, "r") as f:
 
 AUTHOR_LINK = f"u/{CONFIG['author']}"
 
+if CONFIG.get("debug"):
+    _logger.setLevel(logging.DEBUG)
+
 
 # copypasta text and keywords
 
@@ -72,7 +75,7 @@ ERROR_SLEEP_TIME = 60
 while True:
     try:
         for submission in subreddit.stream.submissions(skip_existing=True):
-            _logger.debug("%s: Title: %s", submission.id, submission.title)
+            _logger.debug("%s: Title: %s", submission.permalink, submission.title)
 
             # get text of the reply
 
@@ -87,9 +90,11 @@ while True:
             # reply
 
             if reply_text:
-                _logger.info("%s: Replying", submission.id)
+                _logger.info("%s: Replying", submission.permalink)
                 if CONFIG.get("debug"):
-                    _logger.debug("%s: Reply not posted in debug mode", submission.id)
+                    _logger.debug(
+                        "%s: Reply not posted in debug mode", submission.permalink
+                    )
                 else:
                     submission.reply(reply_text)
 
