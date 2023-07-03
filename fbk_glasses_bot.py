@@ -71,6 +71,7 @@ reddit = praw.Reddit(
     username=CONFIG["username"],
     password=CONFIG["password"],
 )
+_logger.info("Logged in as: %r", reddit.user.me())
 subreddit = reddit.subreddit("+".join(CONFIG["subreddits"]))
 
 ERROR_SLEEP_TIME = 60
