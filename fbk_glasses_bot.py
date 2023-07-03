@@ -30,6 +30,8 @@ with open(CONFIG_PATH, "r") as f:
         sys.exit(1)
 
 AUTHOR_LINK = f"u/{CONFIG['author']}"
+ERROR_SLEEP_TIME = CONFIG.get("error_sleep_time", 60)
+STATE_LOG_INTERVAL = CONFIG.get("state_log_interval", 24 * 60 * 60)
 
 if CONFIG.get("debug"):
     _logger.setLevel(logging.DEBUG)
@@ -62,8 +64,15 @@ KEYWORDS_JP = ["megane", "眼鏡", "メガネ", "めがね"]
 # bot loop
 
 
-_logger.info("Starting")
+def make_state():
+    return {
+        "log_time": time.time(),
+        "submission_count": 0,
+        "reply_count": 0,
+    }
 
+
+_logger.info("Starting")
 reddit = praw.Reddit(
     user_agent=f"fbk_glasses_bot (by {AUTHOR_LINK})",
     client_id=CONFIG["client_id"],
@@ -72,13 +81,15 @@ reddit = praw.Reddit(
     password=CONFIG["password"],
 )
 _logger.info("Logged in as: %r", reddit.user.me())
-subreddit = reddit.subreddit("+".join(CONFIG["subreddits"]))
 
-ERROR_SLEEP_TIME = 60
+subreddit = reddit.subreddit("+".join(CONFIG["subreddits"]))
+state = make_state()
+
 while True:
     try:
         for submission in subreddit.stream.submissions(skip_existing=True):
             _logger.debug("%s: Title: %s", submission.permalink, submission.title)
+            state["submission_count"] += 1
 
             # get text of the reply
 
@@ -94,12 +105,26 @@ while True:
 
             if reply_text:
                 _logger.info("%s: Replying", submission.permalink)
+                state["reply_count"] += 1
+
                 if CONFIG.get("debug"):
                     _logger.debug(
                         "%s: Reply not posted in debug mode", submission.permalink
                     )
                 else:
                     submission.reply(reply_text)
+
+            # log number of processed submissions
+
+            state_time_delta = int(time.time() - state["log_time"])
+            if state_time_delta > STATE_LOG_INTERVAL:
+                _logger.info(
+                    "%s submissions and %s replies processed in last %s seconds",
+                    state["submission_count"],
+                    state["reply_count"],
+                    state_time_delta,
+                )
+                state = make_state()
 
     except KeyboardInterrupt:
         _logger.info("Keyboard interrupt")
