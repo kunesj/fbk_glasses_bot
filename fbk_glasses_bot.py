@@ -130,11 +130,15 @@ while True:
         _logger.info("Keyboard interrupt")
         break
 
-    except praw.exceptions.RedditAPIException as e:
+    except (
+        praw.exceptions.RedditAPIException,
+        praw.exceptions.RequestException,
+    ) as e:
         # might be rate limited
         _logger.error(
-            "Unexpected API error! Sleeping %ss just in case it's a rate limit: %s",
+            "Unexpected API error! Sleeping %ss just in case it's a rate limit. %s: %s",
             ERROR_SLEEP_TIME,
+            e.__class__.__name__,
             e,
         )
         time.sleep(ERROR_SLEEP_TIME)
