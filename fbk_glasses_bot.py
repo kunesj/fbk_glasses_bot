@@ -7,6 +7,7 @@ import sys
 import time
 
 import praw
+import prawcore
 
 logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -132,7 +133,7 @@ while True:
 
     except (
         praw.exceptions.RedditAPIException,
-        praw.exceptions.RequestException,
+        prawcore.exceptions.RequestException,
     ) as e:
         # might be rate limited
         _logger.error(
