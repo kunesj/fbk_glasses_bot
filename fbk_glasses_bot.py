@@ -133,11 +133,11 @@ while True:
 
     except (
         praw.exceptions.RedditAPIException,
-        prawcore.exceptions.RequestException,
+        prawcore.exceptions.PrawcoreException,
     ) as e:
-        # might be rate limited
+        # might be a rate limit or HTTP 500
         _logger.error(
-            "Unexpected API error! Sleeping %ss just in case it's a rate limit. %s: %s",
+            "API error! Will sleep for %ss. %s: %s",
             ERROR_SLEEP_TIME,
             e.__class__.__name__,
             e,
@@ -145,7 +145,5 @@ while True:
         time.sleep(ERROR_SLEEP_TIME)
 
     except Exception:
-        _logger.exception(
-            "Unexpected error! Sleeping %ss before trying again.", ERROR_SLEEP_TIME
-        )
+        _logger.exception("Unexpected error! Will sleep for %ss.", ERROR_SLEEP_TIME)
         time.sleep(ERROR_SLEEP_TIME)
