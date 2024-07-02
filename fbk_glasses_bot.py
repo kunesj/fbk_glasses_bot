@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3.11
 
 import json
 import logging
@@ -31,6 +31,7 @@ with open(CONFIG_PATH, "r") as f:
         sys.exit(1)
 
 AUTHOR_LINK = f"u/{CONFIG['author']}"
+CLIP_LINK = CONFIG.get("clip_link", "https://www.youtube.com/watch?v=lWVt0YnSYEY")
 ERROR_SLEEP_TIME = CONFIG.get("error_sleep_time", 60)
 STATE_LOG_INTERVAL = CONFIG.get("state_log_interval", 24 * 60 * 60)
 
@@ -46,14 +47,14 @@ if CONFIG.get("debug"):
 FBK_COPYPASTA = f"""I gotchu
 _Takes a deep breath_
 
-Glasses are really versatile. First, you can have glasses-wearing girls take them off and suddenly become beautiful, or have girls wearing glasses flashing those cute grins, or have girls stealing the protagonist's glasses and putting them on like, "Haha, got your glasses!" That's just way too cute! Also, boys with glasses! I really like when their glasses have that suspicious looking gleam, and it's amazing how it can look really cool or just be a joke. I really like how it can fulfill all those abstract needs. Being able to switch up the styles and colors of glasses based on your mood is a lot of fun too! It's actually so much fun! You have those half rim glasses, or the thick frame glasses, everything! It's like you're enjoying all these kinds of glasses at a buffet. I really want Luna to try some on or Marine to try some on to replace her eyepatch. We really need glasses to become a thing in hololive and start selling them for HoloComi. Don't. You. Think. We. Really. Need. To. Officially. Give. Everyone. Glasses?
+[Glasses are really versatile. First, you can have glasses-wearing girls take them off and suddenly become beautiful, or have girls wearing glasses flashing those cute grins, or have girls stealing the protagonist's glasses and putting them on like, "Haha, got your glasses!" That's just way too cute! Also, boys with glasses! I really like when their glasses have that suspicious looking gleam, and it's amazing how it can look really cool or just be a joke. I really like how it can fulfill all those abstract needs. Being able to switch up the styles and colors of glasses based on your mood is a lot of fun too! It's actually so much fun! You have those half rim glasses, or the thick frame glasses, everything! It's like you're enjoying all these kinds of glasses at a buffet. I really want Luna to try some on or Marine to try some on to replace her eyepatch. We really need glasses to become a thing in hololive and start selling them for HoloComi. Don't. You. Think. We. Really. Need. To. Officially. Give. Everyone. Glasses?]({CLIP_LINK})
 
 
 _this is a bot. by {AUTHOR_LINK}_"""
 FBK_COPYPASTA_JP = f"""I gotchu
 _Takes a deep breath_
 
-眼鏡っていうのは本当にめちゃめちゃ多様性があるんですよねまず眼鏡をかけている女の子が眼鏡を外して美少女だったりとか逆に眼鏡をかけてニコニコしてみたり主人公の眼鏡を奪って着けてる女子や｢うばっちゃったぞ☆｣みたいにかけてそれも凄いかわいいんですよねあとは眼鏡男子もねあの眼鏡があやしく光ったり逆光してる姿もいいですしかっこいいもかわいいもそしてギャグまで使い回せるってのはめちゃめちゃいいんですよねシチュエーションでも対応してできるところもめちゃめちゃいいんですよ多種多様な形とか色とかもそのキャラに合った眼鏡を着せ替えて楽しむのも本当に楽しいですアンダーリムとかねちょっと淵が太いやつとかね本当にヴァイキングのようにめちゃめちゃ楽しめるんですルーナちゃんにかけてみたりマリンちゃんも眼帯外してかけてみたりとかもうホロライブメガネはマジで流行ってほしいしホロコミに出すべきだし是非！公式から！みんなに！眼鏡を！付与して！ほしいと思わないかなぁ！？かけたいよね？
+[眼鏡っていうのは本当にめちゃめちゃ多様性があるんですよねまず眼鏡をかけている女の子が眼鏡を外して美少女だったりとか逆に眼鏡をかけてニコニコしてみたり主人公の眼鏡を奪って着けてる女子や｢うばっちゃったぞ☆｣みたいにかけてそれも凄いかわいいんですよねあとは眼鏡男子もねあの眼鏡があやしく光ったり逆光してる姿もいいですしかっこいいもかわいいもそしてギャグまで使い回せるってのはめちゃめちゃいいんですよねシチュエーションでも対応してできるところもめちゃめちゃいいんですよ多種多様な形とか色とかもそのキャラに合った眼鏡を着せ替えて楽しむのも本当に楽しいですアンダーリムとかねちょっと淵が太いやつとかね本当にヴァイキングのようにめちゃめちゃ楽しめるんですルーナちゃんにかけてみたりマリンちゃんも眼帯外してかけてみたりとかもうホロライブメガネはマジで流行ってほしいしホロコミに出すべきだし是非！公式から！みんなに！眼鏡を！付与して！ほしいと思わないかなぁ！？かけたいよね？]({CLIP_LINK})
 
 
 _this is a bot. by {AUTHOR_LINK}_"""
@@ -71,6 +72,18 @@ def make_state():
         "submission_count": 0,
         "reply_count": 0,
     }
+
+
+def check_keyword(content, keywords):
+    alnum_parts = "".join((x if x.isalnum() else " ") for x in content.lower()).split()
+    return any(
+        (
+            (word in alnum_parts)  # EN/romanji keywords
+            if word.isascii()
+            else any(word in part for part in alnum_parts)  # JP keywords
+        )
+        for word in keywords
+    )
 
 
 _logger.info("Starting")
@@ -94,10 +107,9 @@ while True:
 
             # get text of the reply
 
-            alnum_title = "".join(e for e in submission.title.lower() if e.isalnum())
-            if any(x in alnum_title for x in KEYWORDS):
+            if check_keyword(submission.title, KEYWORDS):
                 reply_text = FBK_COPYPASTA
-            elif any(x in alnum_title for x in KEYWORDS_JP):
+            elif check_keyword(submission.title, KEYWORDS_JP):
                 reply_text = FBK_COPYPASTA_JP
             else:
                 reply_text = None
