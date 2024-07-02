@@ -10,7 +10,7 @@ Following instructions are for `Raspbian GNU/Linux 10 (buster)`, but they should
 ### Install dependencies
 
 ```shell
-python3.11 -m pip install -U -r requirements.txt
+python3.9 -m pip install -U -r requirements.txt
 ```
 
 ### Create config file
@@ -31,7 +31,7 @@ Create `config.json` file with your API credentials and other configuration.
 ### Check if the bot works
 
 ```shell
-python3.11 fbk_glasses_bot.py
+python3.9 fbk_glasses_bot.py
 ```
 
 ### Create service (Optional)
@@ -41,7 +41,7 @@ To automatically start the bot as a system service, create a new file `/etc/syst
 ```text
 [Service]
 WorkingDirectory=/home/YOUR_USER_NAME/fbk_glasses_bot
-ExecStart=/usr/local/bin/python3.11 fbk_glasses_bot.py
+ExecStart=/usr/local/bin/python3.9 fbk_glasses_bot.py
 Restart=always
 User=YOUR_USER_NAME
 Group=YOUR_USER_NAME
@@ -71,6 +71,6 @@ sudo journalctl -u fbk_glasses_bot
 Configure pre-commit.
 
 ```shell
-python3.11 -m pip --no-cache-dir install pre-commit
+python3.9 -m pip --no-cache-dir install pre-commit
 pre-commit install
 ```
