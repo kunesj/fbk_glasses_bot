@@ -3,7 +3,29 @@
 Reddit bot for automatic Fubuki copypasta.
 
 
-## Setup
+## Setup - Docker (Recommended)
+
+Create `config.json` file with your API credentials and other configuration.
+
+```json
+{
+    "author": "YOUR_USER_NAME",
+    "subreddits": ["hololive", "hololewd", "test"],
+    "client_id": "***********",
+    "client_secret": "***********",
+    "username": "fbk_glasses_bot",
+    "password": "***********"
+}
+```
+
+Start the docker image
+
+```shell
+docker compose up
+```
+
+
+## Setup - Raspbian GNU/Linux 10 (buster)
 
 Following instructions are for `Raspbian GNU/Linux 10 (buster)`, but they should be very similar for any other Debian/Ubuntu based OS.
 
