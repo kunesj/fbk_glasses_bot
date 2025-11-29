@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.9
-
 import json
 import logging
 import os
