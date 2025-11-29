@@ -8,3 +8,178 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+
+[tool.ruff]
+# ruff is used to ensure code consistency
+# Error suppression:
+#   Supress line violation: add "# noqa: {code}" at the end of the line
+#   Supress multi-line violation: add "# noqa: {code}" at the end of the last line
+#   Supress violation in whole file: add "# ruff: noqa: {code}" somewhere at the top of the file
+#   Supress whole file: add "# ruff: noqa" somewhere at the top of the file
+#
+# For rules explanations see: https://docs.astral.sh/ruff/rules/
+builtins = []
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "dist",
+    "node_modules",
+    "venv",
+]
+line-length = 120
+indent-width = 4
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    # flake8-annotations - require type annotations
+    "ANN",
+    # flake8-async - async specific rules
+    "ASYNC",
+    # flake8-bandit - security rules
+    "S",
+    # flake8-blind-except - rule blind try-except statements
+    "BLE",
+    # flake8-bugbear - rules catching common code pitfalls leading to bugs
+    "B",
+    # flake8-builtins - rules preventing re-defining builtins
+    "A",
+    # flake8-commas - comma usage consistency
+    "COM",
+    # flake8-comprehensions - comprehensions consistency
+    "C4",
+    # flake8-debugger - no breakpoints in code allowed
+    "T10",
+    # flake8-gettext - prevents incorrect usage (untranslatable texts) of gettext lib
+    "INT",
+    # flake8-implicit-str-concat - prevent weird string splits
+    "ISC",
+    # flake8-import-conventions - imports consistency
+    "ICN",
+    # flake8-logging - logging consistency
+    "LOG",
+    # flake8-logging-format - logging consistency continuation
+    "G",
+    # flake8-no-pep420 - ensure packages are not missing the __init__.py file
+    "INP",
+    # flake8-pie - validates mostly duplicate definitions or pointless usages
+    "PIE",
+    # flake8-print - prevent prints in code
+    "T20",
+    # flake8-pyi - stub files checks
+    "PYI",
+    # flake8-quotes - single/double quotes consistency
+    "Q",
+    # flake8-raise - remove redundant parentheses on raises
+    "RSE",
+    # flake8-return - return consistency
+    "RET",
+    # flake8-self - accessing private members
+    "SLF",
+    # flake8-simplify - some commonly used expression can be simplified
+    "SIM",
+    # flake8-slots - slots must be used for several subtypes
+    "SLOT",
+    # flake8-tidy-imports - relative imports are allowed from siblings only
+    "TID",
+    # flake8-type-checking - type checking consistency
+    "TC",
+    # flake8-unused-arguments - prevent unused arguments
+    "ARG",
+    # flake8-use-pathlib - prefer the pathlib stdlib
+    "PTH",
+    # flynt - use f-strings instead of static joins
+    "FLY",
+    # isort - sort imports
+    "I",
+    # mccabe - prevent complex code
+    "C90",
+    # NumPy-specific rules - numpy specific rules
+    "NPY",
+    # pandas-vet - pandas specific rules
+    "PD",
+    # pep8-naming - respect naming conventions
+    "N",
+    # Error - general errors
+    "E",
+    # Warning - general warnings
+    "W",
+    # pydocstyle - docstrings should in code -
+    # "D",
+    # Pyflakes - formatting checks
+    "F",
+    # pygrep-hooks - ignoring rules must be specific
+    "PGH",
+    # Pylint - "classic" pylint checks
+    "PL",
+    # Convention - common code convetions
+    "PLC",
+    # Error - common easily detectable runtime errors
+    "PLE",
+    # Refactor - easily refactorable code
+    "PLR",
+    # Warning - general warnings
+    "PLW",
+    # refurb - code refurbishment checks
+    "FURB",
+    # Ruff-specific rules
+    "RUF",
+    # tryceratops - exception handling antipatterns
+    "TRY",
+]
+ignore = [
+    # no not forbid typing.Any - Any type is needed for at least *args and **kwargs
+    "ANN401",
+
+    # allow unused arguments in methods/functions/... (too many false positives)
+    "ARG001",
+    "ARG002",
+    "ARG003",
+    "ARG004",
+    "ARG005",
+
+    # allow unnecessary collection calls
+    # - `dict(foo=1)` looks better than `{"foo": 1}` when dynamically building function args etc.
+    # - empty `tuple()` is less confusing than empty `()`
+    "C408",
+
+    # do not enforce trailing comma missing
+    "COM812",
+
+    # copypasta can't be broken into multiple lines
+    "E501",
+    # copypasta contains full-width characters
+    "RUF001",
+
+    # allow "long" messages outside of exception class - prevented normal use of ValueError
+    "TRY003",
+    # allow using `_logger.error` instead of `_logger.exception`
+    # - we don't want to always log the traceback (especially when we plan to re-raise the exception)
+    "TRY400",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level is exceeded
+max-complexity = 18

@@ -1,8 +1,9 @@
 import json
 import logging
-import os
+import pathlib
 import sys
 import time
+from typing import Iterable
 
 import praw
 import prawcore
@@ -15,18 +16,16 @@ _logger.setLevel(logging.INFO)
 
 # load config
 
-
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-if not os.path.exists(CONFIG_PATH):
+CONFIG_PATH = pathlib.Path(__file__).parent / "config.json"
+if not CONFIG_PATH.exists():
     _logger.error("Config file not found: %s", CONFIG_PATH)
     sys.exit(1)
 
-with open(CONFIG_PATH, "r") as f:
-    try:
-        CONFIG = json.loads(f.read())
-    except json.JSONDecodeError:
-        _logger.exception("Config file is not valid JSON")
-        sys.exit(1)
+try:
+    CONFIG = json.loads(CONFIG_PATH.read_text())
+except json.JSONDecodeError:
+    _logger.exception("Config file is not valid JSON")
+    sys.exit(1)
 
 AUTHOR_LINK = f"u/{CONFIG['author']}"
 CLIP_LINK = CONFIG.get("clip_link", "https://www.youtube.com/watch?v=lWVt0YnSYEY")
@@ -64,7 +63,7 @@ KEYWORDS_JP = ["megane", "眼鏡", "メガネ", "めがね"]
 # bot loop
 
 
-def make_state():
+def make_state() -> None:
     return {
         "log_time": time.time(),
         "submission_count": 0,
@@ -72,7 +71,7 @@ def make_state():
     }
 
 
-def check_keyword(content, keywords):
+def check_keyword(content: str, keywords: Iterable[str]) -> bool:
     alnum_parts = "".join((x if x.isalnum() else " ") for x in content.lower()).split()
     return any(
         (
@@ -119,9 +118,7 @@ while True:
                 state["reply_count"] += 1
 
                 if CONFIG.get("debug"):
-                    _logger.debug(
-                        "%s: Reply not posted in debug mode", submission.permalink
-                    )
+                    _logger.debug("%s: Reply not posted in debug mode", submission.permalink)
                 else:
                     submission.reply(reply_text)
 
