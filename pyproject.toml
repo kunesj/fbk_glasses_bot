@@ -8,7 +8,8 @@ dependencies = [
 
 [tool.uv]
 package = false
-
+exclude-newer = "7 days"
+required-version = ">=0.11.5"
 
 [tool.ruff]
 # ruff is used to ensure code consistency
